@@ -32,6 +32,7 @@ public class AStar {
 		this.delay = delay;
     }
     
+    // Sets the start and end points
     public void setStartAndEnd(Node start, Node end) {
     	this.startX = start.getX();
     	this.startY = start.getY();
@@ -50,7 +51,7 @@ public class AStar {
         }
     }
 
-    // Gets the neighbors of a node
+    // Gets the neighbors of a node/point
     private void getNeighbors(int x, int y) {
     	
     	// Checks North
@@ -101,6 +102,28 @@ public class AStar {
         return h_score;
     }
 
+    // Checks the valid neighbors of a node
+    private void checkNeighbor(Point currentPoint, int cur_x, int cur_y) {
+        Node node = new Node(cur_x, cur_y);
+        int g_score = currentPoint.get_gscore() + 1;
+        int h_score = heuristic(cur_x, cur_y);
+        int f_score = g_score + h_score;
+        Point newPoint = new Point(node, currentPoint, g_score, h_score, f_score);
+
+        // Checks if a connection has been found -
+        // if the current node being checked is the endpoint
+        if (isDestination(cur_x, cur_y)) {
+            backtrackToStart(newPoint);
+            return;
+        }
+
+        if (pointOnGrid[cur_x][cur_y].get_gscore() > g_score) {
+            priorityQueue.add(newPoint);
+            visited[cur_x][cur_y] = true;
+            GUI.grid[cur_x][cur_y].setBackground(Color.cyan);
+        }
+    }
+
     // A-Star search algorithm implementation
     public void aStarSearch() {
         // Marks the start and end node
@@ -112,110 +135,45 @@ public class AStar {
         Node startNode = new Node(startX, startY);
         pointOnGrid[startX][startY] = new Point(startNode, null, 0, 0, 0);
         priorityQueue.add(pointOnGrid[startX][startY]);
+        visited[startX][startY] = true;
         
         while (!priorityQueue.isEmpty()) {
             delay(delay);
             Point currentPoint = priorityQueue.poll();
             int x = currentPoint.getNode().getX();
             int y = currentPoint.getNode().getY();
-            visited[x][y] = true;
-
             getNeighbors(x, y);
 
             // North
             if (neighbors.contains('N')) {
                 int cur_x = x - 1;
                 int cur_y = y;
-                GUI.grid[cur_x][cur_y].setBackground(Color.cyan);
 
-                Node node = new Node(cur_x, cur_y);
-                int g_score = currentPoint.get_gscore() + 1;
-                int h_score = heuristic(cur_x, cur_y);
-                int f_score = g_score + h_score;
-                Point newPoint = new Point(node, currentPoint, g_score, h_score, f_score);
-
-                // Checks if a connection has been found -
-                // if the current node being checked is the endpoint
-                if (isDestination(cur_x, cur_y)) {
-                    backtrackToStart(newPoint);
-                    return;
-                }
-
-                if (pointOnGrid[cur_x][cur_y].get_fScore() > f_score || pointOnGrid[cur_x][cur_y].get_fScore() == Integer.MAX_VALUE) {
-                    priorityQueue.add(newPoint);
-                }
+                checkNeighbor(currentPoint, cur_x, cur_y);
             }
 
             // South
             if (neighbors.contains('S')) {
                 int cur_x = x + 1;
                 int cur_y = y;
-                GUI.grid[cur_x][cur_y].setBackground(Color.cyan);
 
-                Node node = new Node(cur_x, cur_y);
-                int g_score = currentPoint.get_gscore() + 1;
-                int h_score = heuristic(cur_x, cur_y);
-                int f_score = g_score + h_score;
-                Point newPoint = new Point(node, currentPoint, g_score, h_score, f_score);
-
-                // Checks if a connection has been found -
-                // if the current node being checked is the endpoint
-                if (isDestination(cur_x, cur_y)) {
-                    backtrackToStart(newPoint);
-                    return;
-                }
-
-                if (pointOnGrid[cur_x][cur_y].get_fScore() > f_score || pointOnGrid[cur_x][cur_y].get_fScore() == Integer.MAX_VALUE) {
-                    priorityQueue.add(newPoint);
-                }
+                checkNeighbor(currentPoint, cur_x, cur_y);
             }
 
             // East
             if (neighbors.contains('E')) {
                 int cur_x = x;
                 int cur_y = y + 1;
-                GUI.grid[cur_x][cur_y].setBackground(Color.cyan);
 
-                Node node = new Node(cur_x, cur_y);
-                int g_score = currentPoint.get_gscore() + 1;
-                int h_score = heuristic(cur_x, cur_y);
-                int f_score = g_score + h_score;
-                Point newPoint = new Point(node, currentPoint, g_score, h_score, f_score);
-
-                // Checks if a connection has been found -
-                // if the current node being checked is the endpoint
-                if (isDestination(cur_x, cur_y)) {
-                    backtrackToStart(newPoint);
-                    return;
-                }
-
-                if (pointOnGrid[cur_x][cur_y].get_fScore() > f_score || pointOnGrid[cur_x][cur_y].get_fScore() == Integer.MAX_VALUE) {
-                    priorityQueue.add(newPoint);
-                }
+                checkNeighbor(currentPoint, cur_x, cur_y);
             }
 
             // West
             if (neighbors.contains('W')) {
                 int cur_x = x;
                 int cur_y = y - 1;
-                GUI.grid[cur_x][cur_y].setBackground(Color.cyan);
 
-                Node node = new Node(cur_x, cur_y);
-                int g_score = currentPoint.get_gscore() + 1;
-                int h_score = heuristic(cur_x, cur_y);
-                int f_score = g_score + h_score;
-                Point newPoint = new Point(node, currentPoint, g_score, h_score, f_score);
-
-                // Checks if a connection has been found -
-                // if the current node being checked is the endpoint
-                if (isDestination(cur_x, cur_y)) {
-                    backtrackToStart(newPoint);
-                    return;
-                }
-
-                if (pointOnGrid[cur_x][cur_y].get_fScore() > f_score || pointOnGrid[cur_x][cur_y].get_fScore() == Integer.MAX_VALUE) {
-                    priorityQueue.add(newPoint);
-                }
+                checkNeighbor(currentPoint, cur_x, cur_y);
             }
             neighbors.clear();
         }
@@ -225,14 +183,14 @@ public class AStar {
         try {
             Thread.sleep(delay);
         } catch (Exception e) {
-            //TODO: handle exception
+            e.printStackTrace();
         }
     }
 }
 
 // Stores a point on the grid along with its parent,
-// heuristic score (h), global score (f) and the movement cost
-// to the next point/node (g)
+// heuristic score (h), global score (f) and the movement
+// cost to the next point/node (g)
 class Point {
     private Node node;
     private Point parent;
@@ -280,12 +238,8 @@ class Point {
 
 class PointComparator implements Comparator<Point> {
     public int compare(Point p1, Point p2) {
-        if (p1.get_fScore() < p2.get_fScore())
-            return -1;
-
-        else if (p1.get_fScore() > p2.get_fScore())
-            return 1;
-
-        return 0;
+        if (p1.get_fScore() == p2.get_fScore())
+            return Integer.compare(p1.get_hscore(), p2.get_hscore());
+        return Integer.compare(p1.get_fScore(), p2.get_fScore());
     }
 }

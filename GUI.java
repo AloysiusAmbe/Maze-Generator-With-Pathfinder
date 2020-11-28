@@ -8,7 +8,7 @@ import javax.swing.event.ChangeListener;
 
 public class GUI extends JPanel {
 	
-    // Initializes these class
+    // Initializes the mazegenerator and serach algo classes
     MazeGenerator generator;
     BreadthFirstSearch breadthFirstSearch;
 	DepthFirstSearch depthFirstSearch;
@@ -24,6 +24,7 @@ public class GUI extends JPanel {
     private final Color WALL_COLOR = Color.gray;
     private final Color PATH_COLOR = Color.white;
 
+	// Initalizing JFrame components
     static JButton grid[][];
     private int[][] maze;
     private boolean[][] visited;
@@ -97,6 +98,7 @@ public class GUI extends JPanel {
 		maze = new int[rows][cols];
 		visited = new boolean[rows][cols];
 
+		// Button listener for the JFrame grid
 		ActionListener btnListener = new ActionListener() {
 			
 			@Override
@@ -143,8 +145,6 @@ public class GUI extends JPanel {
 								int selectedAlgo = algosComboBox.getSelectedIndex();
 								Node start = new Node(startX, startY);
 								Node end = new Node(endX, endY);
-								System.out.println(startX + " " + startY);
-								System.out.println(endX + " " + endY);
 								switch (selectedAlgo) {
 									case 0:
 										breadthFirstSearch.setStartAndEnd(start, end);
@@ -165,7 +165,9 @@ public class GUI extends JPanel {
 			}
 		};
 		
-        // Adding the grid to the JFrame
+		// Adding the grid to the JFrame
+		// Adding listeners to them
+		// Setting everything in maze to paths (1)
      	for (int i = 0; i < rows; i++) {
 			for (int j = 0; j < cols; j++) {
 				grid[i][j] = new JButton();
@@ -187,8 +189,11 @@ public class GUI extends JPanel {
 		window.setResizable(false);
 		window.setVisible(true);
 		
+		// Adds listeners to the buttons on the JFrame
 		generateMaze.addActionListener(new GenerateMazeListener());
 		searchButton.addActionListener(new findPathListener());
+
+		// Updates the delay according to the slider on the JFrame
 		speed.addChangeListener(new ChangeListener() {
 			
 			@Override
@@ -202,20 +207,21 @@ public class GUI extends JPanel {
 			}
 		});
 		
-		// Initializing needed classes
+		// Creating instances of the maze generaor and search algo classes
 		depthFirstSearch = new DepthFirstSearch(maze, visited, rows, cols);
 		breadthFirstSearch = new BreadthFirstSearch(maze, visited, rows, cols);
 		generator = new MazeGenerator(maze, visited, rows, cols);
 		aStar = new AStar(maze, visited, rows, cols);
     }
     
-    // Button Listeners 
+    // Button Listener for create maze button
     private class GenerateMazeListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
 			createMaze();
 		}
     }
-    
+	
+	// Button Listener for find path button
     private class findPathListener implements ActionListener {
 		public void actionPerformed(ActionEvent e) {
 			findPath();
@@ -228,7 +234,10 @@ public class GUI extends JPanel {
 
 			@Override
 			protected Void doInBackground() throws Exception {
+				// Prevents the user from creating walls, changing
+				// the start or end point while the maze is being generated
 				solving = true;
+				solvedCount = 0;
 				generateMaze.setEnabled(false);
 				bfs.setEnabled(false);
 				searchButton.setEnabled(false);
@@ -245,15 +254,18 @@ public class GUI extends JPanel {
 		};
 		worker.execute();
 	}
-    
-    // Starts the Depth First Search
+
     private void findPath() {
     	SwingWorker<Void, Void> worker = new SwingWorker<Void, Void>() {
 
 			@Override
 			protected Void doInBackground() throws Exception {
+				// Prevents the user from creating walls, changing
+				// the start or end point while a path is being found
 				solvedCount = 1;
 				solving = true;
+
+				// Disables these buttons
 				generateMaze.setEnabled(false);
 				bfs.setEnabled(false);
 				searchButton.setEnabled(false);
@@ -267,25 +279,30 @@ public class GUI extends JPanel {
 				// Gets the algorithm choose of the user
 				int selectedAlgo = algosComboBox.getSelectedIndex();
 				switch (selectedAlgo) {
+					// Breadth First Search
 					case 0:
 						breadthFirstSearch.setStartAndEnd(start, end);
 						breadthFirstSearch.findPath();
 						break;
 
+					// Depth-first search
 					case 1:
 						depthFirstSearch.setStartAndEnd(start, end);
 						depthFirstSearch.findPath();
 						break;
 
+					// A-star
 					case 2:
 						aStar.setStartAndEnd(start, end);
 						aStar.aStarSearch();
 						break;
 				}
 				
+				// Enabling these buttons
 				generateMaze.setEnabled(true);
 				bfs.setEnabled(true);
 				searchButton.setEnabled(true);
+
 				solving = false;
 				return null;
 			}
@@ -305,10 +322,13 @@ public class GUI extends JPanel {
 				}
 			}
 		}
+		delay(200); // Delays the program
+	}
+
+	private void delay(int delay) {
 		try {
-			Thread.sleep(100);
+			Thread.sleep(200);
 		} catch (InterruptedException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 	}

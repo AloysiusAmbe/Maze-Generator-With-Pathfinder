@@ -7,7 +7,7 @@ import javax.swing.*;
 // YELLOW - Displaying a path from the start node to the end node
 
 public class Main {
-	
+
 	public static void main(String[] args) {
 		
 		// Initializing the GUI class and creating a JFrame
