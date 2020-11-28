@@ -24,17 +24,20 @@ public class AStar {
         this.visited = visited;
     	this.rows = rows;
     	this.columns = cols;
-    	this.startX = 1;
-    	this.startY = 1;
-    	this.endPointX = rows - 2;
-        this.endPointY = cols - 2;
         pointOnGrid = new Point[rows][cols];
     }
 
     // Updates the delay
     public void setDelay(int delay) {
 		this.delay = delay;
-	}
+    }
+    
+    public void setStartAndEnd(Node start, Node end) {
+    	this.startX = start.getX();
+    	this.startY = start.getY();
+    	this.endPointX = end.getX();
+        this.endPointY = end.getY();
+    }
 
     // Sets every nodes' visited status to false and sets
     // the f_score, g_score and h_score to infinity
@@ -80,6 +83,7 @@ public class AStar {
     // Backtracks to the start point after finding the endpoint
     private void backtrackToStart(Point destination) {
         Node node = destination.getNode();
+        GUI.grid[node.getX()][node.getY()].setBackground(Color.red);
         Point point = destination.getParent();
         
         while (point.getParent() != null) {
@@ -88,6 +92,7 @@ public class AStar {
             GUI.grid[node.getX()][node.getY()].setBackground(PATH_COLOR);
             point = point.getParent();
         }
+        priorityQueue.clear();
     }
 
     // Calculates the heuristic value (h_score) - Manhattan Distance
@@ -107,8 +112,6 @@ public class AStar {
         Node startNode = new Node(startX, startY);
         pointOnGrid[startX][startY] = new Point(startNode, null, 0, 0, 0);
         priorityQueue.add(pointOnGrid[startX][startY]);
-
-        System.out.println(priorityQueue.toString());
         
         while (!priorityQueue.isEmpty()) {
             delay(delay);
@@ -218,7 +221,7 @@ public class AStar {
         }
     }
 
-    private static void delay(int delay) {
+    private void delay(int delay) {
         try {
             Thread.sleep(delay);
         } catch (Exception e) {

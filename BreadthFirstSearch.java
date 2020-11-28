@@ -33,10 +33,13 @@ public class BreadthFirstSearch {
     	this.visited = visited;
     	this.rows = rows;
     	this.columns = cols;
-    	this.startX = 1;
-		this.startY = 1;
-		this.endPointX = rows - 2;
-		this.endPointY = columns - 2;
+    }
+
+    public void setStartAndEnd (Node start, Node end) {
+        this.startX = start.getX();
+    	this.startY = start.getY();
+    	this.endPointX = end.getX();
+        this.endPointY = end.getY();
     }
     
     // Updates the delay

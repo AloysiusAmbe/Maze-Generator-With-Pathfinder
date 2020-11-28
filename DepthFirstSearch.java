@@ -33,6 +33,13 @@ public class DepthFirstSearch {
 		this.delay = delay;
 	}
 
+	public void setStartAndEnd (Node start, Node end) {
+        this.startX = start.getX();
+    	this.startY = start.getY();
+    	this.endPointX = end.getX();
+        this.endPointY = end.getY();
+    }
+
     // Sets the nodes visited status to false
     public void setVisited() {
         for (int i = 0; i < visited.length; i++) {

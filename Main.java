@@ -14,6 +14,5 @@ public class Main {
 		GUI gui = new GUI();
 		JFrame frame = new JFrame();
 		frame.getContentPane().add(gui);
-		
 	}
 }
