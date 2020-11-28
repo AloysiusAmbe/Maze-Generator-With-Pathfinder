@@ -16,7 +16,11 @@ public class GUI extends JPanel {
 
 	// Initializing needed variables
     private int rows = 53, cols = 53;
-    private int delay = 10;
+	private int delay = 10;
+	private int startX = 1, startY = 1;
+	private int endX = rows - 2, endY = cols - 2;
+	private boolean solving = false;
+	private int solvedCount = 0;
     private final Color WALL_COLOR = Color.gray;
     private final Color PATH_COLOR = Color.white;
 
@@ -38,12 +42,11 @@ public class GUI extends JPanel {
 	private JLabel genMaze = new JLabel();
 	private JLabel delayJLabel = new JLabel("Delay: ");
 	private JLabel milliseconds = new JLabel(Integer.toString(delay) + "ms");
-	private String[] algosStrings = {
-		"Breadth First Search",
-		"Depth First Search",
-		"A-Star"
-	};
+	private String[] algosStrings = {"Breadth First Search", "Depth First Search", "A-Star"};
 	private JComboBox<String> algosComboBox = new JComboBox<String>(algosStrings);
+
+	private String[] optionStrings = {"Start", "End", "Wall", "Path"};
+	private JComboBox<String> optionsComboBox = new JComboBox<String>(optionStrings);
     
 	private JFrame window = new JFrame("Maze Generator with PathFinder");
 	
@@ -63,14 +66,16 @@ public class GUI extends JPanel {
 		genMaze.setText("Generate Maze: ");
 		
 		algosJLabel.setBounds(40, 25, 180, 25);
-		algosComboBox.setBounds(140, 25, 180, 25);
+		algosComboBox.setBounds(120, 25, 180, 25);
+
+		optionsComboBox.setBounds(370, 25, 180, 25);
 		
-		generateMaze.setBounds(500, 25, 180, 25);
-		delayJLabel.setBounds(500, 65, 180, 25);
-		speed.setBounds(540, 65, 180, 25);
-		milliseconds.setBounds(720, 65, 180, 25);
+		generateMaze.setBounds(630, 25, 180, 25);
+		delayJLabel.setBounds(600, 65, 180, 25);
+		speed.setBounds(640, 65, 180, 25);
+		milliseconds.setBounds(820, 65, 180, 25);
 		
-		searchButton.setBounds(40, 65, 180, 25);
+		searchButton.setBounds(80, 65, 180, 25);
 		
 		controlsPanel.add(algosJLabel);
 		controlsPanel.add(bfs);
@@ -84,26 +89,97 @@ public class GUI extends JPanel {
 		controlsPanel.add(milliseconds);
 
 		controlsPanel.add(algosComboBox);
+		controlsPanel.add(optionsComboBox);
 		
 		mazePanel.setLayout(new GridLayout(rows, cols));
 		
         grid = new JButton[rows][cols];
 		maze = new int[rows][cols];
 		visited = new boolean[rows][cols];
+
+		ActionListener btnListener = new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent evt) {
+				JButton selectedButton = (JButton) evt.getSource();
+				int selectedOption = optionsComboBox.getSelectedIndex();
+				
+				for (int i = 0; i < rows; i++) {
+					for (int j = 0; j < cols; j++) {
+						if (grid[i][j] == selectedButton && !solving) {
+							switch (selectedOption) {
+								// Start point
+								case 0:
+									grid[startX][startY].setBackground(PATH_COLOR);
+									startX = i;
+									startY = j;
+									grid[i][j].setBackground(Color.green);
+									break;
+
+								// End point
+								case 1:
+									grid[endX][endY].setBackground(PATH_COLOR);
+									endX = i;
+									endY = j;
+									grid[i][j].setBackground(Color.red);
+									break;
+
+								// Wall
+								case 2:
+									maze[i][j] = 0;
+									grid[i][j].setBackground(WALL_COLOR);
+									break;
+
+								// Path
+								case 3:
+									maze[i][j] = 1;
+									grid[i][j].setBackground(PATH_COLOR);
+									break;
+							}
+
+							if (solvedCount >= 1) {
+								// Gets the algorithm choose of the user
+								resetGrid();
+								int selectedAlgo = algosComboBox.getSelectedIndex();
+								Node start = new Node(startX, startY);
+								Node end = new Node(endX, endY);
+								System.out.println(startX + " " + startY);
+								System.out.println(endX + " " + endY);
+								switch (selectedAlgo) {
+									case 0:
+										breadthFirstSearch.setStartAndEnd(start, end);
+										breadthFirstSearch.setDelay(0);
+										breadthFirstSearch.findPath();
+										break;
+
+									case 2:
+										aStar.setStartAndEnd(start, end);
+										aStar.setDelay(0);
+										aStar.aStarSearch();
+										break;
+								}
+							}
+						}
+					}
+				}
+			}
+		};
 		
         // Adding the grid to the JFrame
      	for (int i = 0; i < rows; i++) {
-     		for (int j = 0; j < cols; j++) {
-     			grid[i][j] = new JButton();
-     			grid[i][j].setBackground(WALL_COLOR);
-     			mazePanel.add(grid[i][j]);
-     		}
-     	}
+			for (int j = 0; j < cols; j++) {
+				grid[i][j] = new JButton();
+				grid[i][j].addActionListener(btnListener);
+				grid[i][j].setBackground(PATH_COLOR);
+				mazePanel.add(grid[i][j]);
+				maze[i][j] = 1;
+			}
+		}
      	
      	container.add(controlsPanel);
      	container.add(mazePanel);
      	
-     	window.add(container);
+		window.add(container);
      	
         // JFrame components
 		window.setSize(900, 770);
@@ -125,8 +201,6 @@ public class GUI extends JPanel {
 				generator.setDelay(delay);
 			}
 		});
-		
-		searchButton.setEnabled(false);
 		
 		// Initializing needed classes
 		depthFirstSearch = new DepthFirstSearch(maze, visited, rows, cols);
@@ -154,6 +228,7 @@ public class GUI extends JPanel {
 
 			@Override
 			protected Void doInBackground() throws Exception {
+				solving = true;
 				generateMaze.setEnabled(false);
 				bfs.setEnabled(false);
 				searchButton.setEnabled(false);
@@ -164,6 +239,7 @@ public class GUI extends JPanel {
 				bfs.setEnabled(true);
 				searchButton.setEnabled(true);
 				generateMaze.setEnabled(true);
+				solving = false;
 				return null;
 			}
 		};
@@ -176,24 +252,33 @@ public class GUI extends JPanel {
 
 			@Override
 			protected Void doInBackground() throws Exception {
+				solvedCount = 1;
+				solving = true;
 				generateMaze.setEnabled(false);
 				bfs.setEnabled(false);
 				searchButton.setEnabled(false);
 				
 				resetGrid();
+				
+				// Start and end nodes
+				Node start = new Node(startX, startY);
+				Node end = new Node(endX, endY);
 
 				// Gets the algorithm choose of the user
 				int selectedAlgo = algosComboBox.getSelectedIndex();
 				switch (selectedAlgo) {
 					case 0:
+						breadthFirstSearch.setStartAndEnd(start, end);
 						breadthFirstSearch.findPath();
 						break;
 
 					case 1:
+						depthFirstSearch.setStartAndEnd(start, end);
 						depthFirstSearch.findPath();
 						break;
 
 					case 2:
+						aStar.setStartAndEnd(start, end);
 						aStar.aStarSearch();
 						break;
 				}
@@ -201,9 +286,9 @@ public class GUI extends JPanel {
 				generateMaze.setEnabled(true);
 				bfs.setEnabled(true);
 				searchButton.setEnabled(true);
+				solving = false;
 				return null;
 			}
-			
 		};
 		worker.execute();
 	}
@@ -216,7 +301,7 @@ public class GUI extends JPanel {
 					grid[i][j].setBackground(WALL_COLOR);
 				
 				} else {
-					grid[i][j].setBackground(Color.white);
+					grid[i][j].setBackground(PATH_COLOR);
 				}
 			}
 		}
@@ -227,5 +312,4 @@ public class GUI extends JPanel {
 			e.printStackTrace();
 		}
 	}
-
 }
